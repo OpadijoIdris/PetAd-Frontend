@@ -83,7 +83,7 @@ let mockNotifications: Notification[] = [
   },
 ];
 
-const mockNotificationPreferences: NotificationPreferences = {
+let mockNotificationPreferences: NotificationPreferences = {
   APPROVAL_REQUESTED: true,
   ESCROW_FUNDED: true,
   DISPUTE_RAISED: true,
@@ -172,9 +172,13 @@ export const notifyHandlers = [
     await delay(getDelay(request));
 
     try {
-      const body = await request.json();
-      // Merge incoming preferences into the mock preferences to simulate persistence
-      mockNotificationPreferences = { ...mockNotificationPreferences, ...(body ?? {}) };
+      const body = (await request.json()) as Partial<NotificationPreferences> | null;
+      if (body && typeof body === "object") {
+        mockNotificationPreferences = {
+          ...mockNotificationPreferences,
+          ...body,
+        };
+      }
     } catch {
       // If parsing fails, continue and return 204 to keep tests resilient
     }
